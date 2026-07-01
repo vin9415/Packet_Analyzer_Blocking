@@ -1,0 +1,19 @@
+# Web upload/output temp files
+web/uploads/
+web/outputs/
+
+# Generated PCAP outputs (keep test_dpi.pcap)
+output*.pcap
+out.pcap
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# C++ build artifacts
+dpi_engine
+build/
+*.o
+*.exe

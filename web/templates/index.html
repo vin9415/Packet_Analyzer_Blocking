@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DPI Engine — {{ author }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="header">
+    <div class="container header-inner">
+      <div>
+        <p class="eyebrow">Deep Packet Inspection</p>
+        <h1>DPI Engine</h1>
+        <p class="subtitle">Upload a PCAP, set blocking rules, and analyze network traffic in your browser.</p>
+      </div>
+      <div class="author-badge">
+        <span>Created by</span>
+        <strong>{{ author }}</strong>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card upload-card">
+      <h2>Analyze PCAP</h2>
+      <form id="analyze-form">
+        <div id="drop-zone" class="drop-zone">
+          <input type="file" id="pcap-file" name="pcap" accept=".pcap" hidden>
+          <div class="drop-content">
+            <div class="drop-icon">📦</div>
+            <p><strong>Drop your .pcap file here</strong> or click to browse</p>
+            <p class="hint">Wireshark captures supported · max 50 MB</p>
+            <p id="file-name" class="file-name"></p>
+          </div>
+        </div>
+
+        <div class="rules-grid">
+          <label>
+            Block IPs <span class="label-hint">comma-separated</span>
+            <input type="text" name="block_ips" placeholder="192.168.1.50, 10.0.0.5">
+          </label>
+
+          <label>
+            Block domains <span class="label-hint">substring match</span>
+            <input type="text" name="block_domains" placeholder="youtube, facebook, tiktok">
+          </label>
+        </div>
+
+        <fieldset class="app-fieldset">
+          <legend>Block applications</legend>
+          <div class="app-grid">
+            {% for app in apps %}
+            <label class="chip">
+              <input type="checkbox" name="block_apps" value="{{ app }}">
+              <span>{{ app }}</span>
+            </label>
+            {% endfor %}
+          </div>
+        </fieldset>
+
+        <button type="submit" class="btn-primary" id="submit-btn">
+          Run DPI Analysis
+        </button>
+      </form>
+    </section>
+
+    <section id="loading" class="card loading-card hidden">
+      <div class="spinner"></div>
+      <p>Inspecting packets…</p>
+    </section>
+
+    <section id="error" class="card error-card hidden"></section>
+
+    <section id="results" class="hidden">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-label">Total Packets</span>
+          <span class="stat-value" id="stat-total">0</span>
+        </div>
+        <div class="stat-card green">
+          <span class="stat-label">Forwarded</span>
+          <span class="stat-value" id="stat-forwarded">0</span>
+        </div>
+        <div class="stat-card red">
+          <span class="stat-label">Dropped</span>
+          <span class="stat-value" id="stat-dropped">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Active Flows</span>
+          <span class="stat-value" id="stat-flows">0</span>
+        </div>
+      </div>
+
+      <div class="results-grid">
+        <div class="card">
+          <h3>Application Breakdown</h3>
+          <div id="app-breakdown" class="bar-list"></div>
+        </div>
+        <div class="card">
+          <h3>Detected Domains</h3>
+          <div id="domains-list" class="table-wrap"></div>
+        </div>
+      </div>
+
+      <div class="card" id="blocked-card">
+        <h3>Blocked Traffic</h3>
+        <div id="blocked-list" class="table-wrap"></div>
+      </div>
+
+      <div class="actions">
+        <a id="download-btn" class="btn-primary" href="#" download>Download Filtered PCAP</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>DPI Engine — Deep Packet Inspection System</p>
+      <p>Made by <strong>{{ author }}</strong></p>
+    </div>
+  </footer>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

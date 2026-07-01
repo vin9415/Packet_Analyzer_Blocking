@@ -1,0 +1,5 @@
+# DPI Packet Analyzer - Python implementation
+# Author: Vinit Kumar Pandey
+# Requires Python 3.10+
+
+flask>=3.0.0
