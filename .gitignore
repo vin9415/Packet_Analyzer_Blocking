@@ -11,9 +11,3 @@ __pycache__/
 *.py[cod]
 .venv/
 venv/
-
-# C++ build artifacts
-dpi_engine
-build/
-*.o
-*.exe

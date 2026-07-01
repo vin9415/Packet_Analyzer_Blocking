@@ -2,7 +2,7 @@
 
 **Author:** Vinit Kumar Pandey
 
-> **Python version (recommended):** This project is now available in Python. No compiler or external libraries required — only Python 3.10+.
+> **Python implementation:** No compiler or external libraries required for the CLI — only Python 3.10+. The web UI needs Flask (`pip install -r requirements.txt`).
 
 ### Quick start (Python)
 
@@ -39,8 +39,6 @@ run_web.py           # Web UI (Flask)
 web/                 # Website templates & static files
 generate_test_pcap.py
 ```
-
-The legacy C++ sources remain in `include/` and `src/` for reference.
 
 ---
 
@@ -179,38 +177,37 @@ TLS Client Hello:
 
 ### Two Versions
 
-| Version | File | Use Case |
-|---------|------|----------|
-| Simple (Single-threaded) | `src/main_working.cpp` | Learning, small captures |
-| Multi-threaded | `src/dpi_mt.cpp` | Production, large captures |
+| Version | Entry point | Use case |
+|---------|-------------|----------|
+| Simple (single-threaded) | `main_simple.py` | Learning, small captures |
+| Multi-threaded | `main_mt.py` | Larger captures, parallel processing |
+| Web UI | `run_web.py` | Browser-based upload and analysis |
 
 ---
 
 ## 4. File Structure
 
 ```
-packet_analyzer/
-├── include/                    # Header files (declarations)
-│   ├── pcap_reader.h          # PCAP file reading
-│   ├── packet_parser.h        # Network protocol parsing
-│   ├── sni_extractor.h        # TLS/HTTP inspection
-│   ├── types.h                # Data structures (FiveTuple, AppType, etc.)
-│   ├── rule_manager.h         # Blocking rules (multi-threaded version)
-│   ├── connection_tracker.h   # Flow tracking (multi-threaded version)
-│   ├── load_balancer.h        # LB thread (multi-threaded version)
-│   ├── fast_path.h            # FP thread (multi-threaded version)
-│   ├── thread_safe_queue.h    # Thread-safe queue
-│   └── dpi_engine.h           # Main orchestrator
+Packet_analyzer/
+├── dpi/                        # Core Python engine
+│   ├── pcap_reader.py         # PCAP file handling
+│   ├── packet_parser.py       # Protocol parsing
+│   ├── sni_extractor.py       # SNI/Host extraction
+│   ├── types.py               # FiveTuple, AppType, helpers
+│   ├── blocking_rules.py      # IP/app/domain blocking
+│   ├── processor.py           # Shared PCAP processing logic
+│   ├── engine_simple.py       # ★ SIMPLE VERSION ★
+│   ├── engine_mt.py           # ★ MULTI-THREADED VERSION ★
+│   └── thread_safe_queue.py   # Thread-safe queue (MT engine)
 │
-├── src/                        # Implementation files
-│   ├── pcap_reader.cpp        # PCAP file handling
-│   ├── packet_parser.cpp      # Protocol parsing
-│   ├── sni_extractor.cpp      # SNI/Host extraction
-│   ├── types.cpp              # Helper functions
-│   ├── main_working.cpp       # ★ SIMPLE VERSION ★
-│   ├── dpi_mt.cpp             # ★ MULTI-THREADED VERSION ★
-│   └── [other files]          # Supporting code
+├── web/                        # Flask web application
+│   ├── app.py
+│   ├── templates/index.html
+│   └── static/
 │
+├── main_simple.py             # CLI for simple engine
+├── main_mt.py                 # CLI for multi-threaded engine
+├── run_web.py                 # Start the web UI
 ├── generate_test_pcap.py      # Creates test data
 ├── test_dpi.pcap              # Sample capture with various traffic
 └── README.md                  # This file!
@@ -220,7 +217,7 @@ packet_analyzer/
 
 ## 5. The Journey of a Packet (Simple Version)
 
-Let's trace a single packet through `main_working.cpp`:
+Let's trace a single packet through `main_simple.py` (via `dpi/processor.py`):
 
 ### Step 1: Read PCAP File
 
@@ -269,7 +266,7 @@ while (reader.readNextPacket(raw)) {
 PacketParser::parse(raw, parsed);
 ```
 
-**What happens (in packet_parser.cpp):**
+**What happens (in `dpi/packet_parser.py`):**
 
 ```
 raw.data bytes:
@@ -347,7 +344,7 @@ if (pkt.tuple.dst_port == 443 && pkt.payload_length > 5) {
 }
 ```
 
-**What happens (in sni_extractor.cpp):**
+**What happens (in `dpi/sni_extractor.py`):**
 
 1. **Check if it's a TLS Client Hello:**
    ```
@@ -372,7 +369,7 @@ if (pkt.tuple.dst_port == 443 && pkt.payload_length > 5) {
 
 4. **Map SNI to App Type:**
    ```cpp
-   // In types.cpp
+   # In dpi/types.py
    if (sni.find("youtube") != std::string::npos) {
        return AppType::YOUTUBE;
    }
@@ -435,7 +432,7 @@ for (const auto& [tuple, flow] : flows) {
 
 ## 6. The Journey of a Packet (Multi-threaded Version)
 
-The multi-threaded version (`dpi_mt.cpp`) adds **parallelism** for high performance:
+The multi-threaded version (`main_mt.py` / `dpi/engine_mt.py`) adds **parallelism** for high performance:
 
 ### Architecture Overview
 
@@ -605,7 +602,7 @@ class TSQueue {
 
 ## 7. Deep Dive: Each Component
 
-### pcap_reader.h / pcap_reader.cpp
+### dpi/pcap_reader.py
 
 **Purpose:** Read network captures saved by Wireshark
 
@@ -632,7 +629,7 @@ struct PcapPacketHeader {
 - `readNextPacket(raw)`: Read next packet into buffer
 - `close()`: Clean up
 
-### packet_parser.h / packet_parser.cpp
+### dpi/packet_parser.py
 
 **Purpose:** Extract protocol fields from raw bytes
 
@@ -658,7 +655,7 @@ uint16_t port = ntohs(*(uint16_t*)(data + offset));
 uint32_t seq = ntohl(*(uint32_t*)(data + offset));
 ```
 
-### sni_extractor.h / sni_extractor.cpp
+### dpi/sni_extractor.py
 
 **Purpose:** Extract domain names from TLS and HTTP
 
@@ -688,7 +685,7 @@ std::optional<std::string> HTTPHostExtractor::extract(
 }
 ```
 
-### types.h / types.cpp
+### dpi/types.py
 
 **Purpose:** Define data structures used throughout
 
@@ -909,42 +906,37 @@ Connection to YouTube:
 
 ### Prerequisites
 
-- **macOS/Linux** with C++17 compiler
-- **g++** or **clang++**
-- No external libraries needed!
+- **Python 3.10+**
+- For the web UI: `pip install -r requirements.txt`
 
-### Build Commands
+### Run commands
 
-**Simple Version:**
+**Generate test data:**
 ```bash
-g++ -std=c++17 -O2 -I include -o dpi_simple \
-    src/main_working.cpp \
-    src/pcap_reader.cpp \
-    src/packet_parser.cpp \
-    src/sni_extractor.cpp \
-    src/types.cpp
+python generate_test_pcap.py
 ```
 
-**Multi-threaded Version:**
+**Simple version:**
 ```bash
-g++ -std=c++17 -pthread -O2 -I include -o dpi_engine \
-    src/dpi_mt.cpp \
-    src/pcap_reader.cpp \
-    src/packet_parser.cpp \
-    src/sni_extractor.cpp \
-    src/types.cpp
+python main_simple.py test_dpi.pcap output.pcap --block-app YouTube --block-ip 192.168.1.50
 ```
 
-### Running
-
-**Basic usage:**
+**Multi-threaded version:**
 ```bash
-./dpi_engine test_dpi.pcap output.pcap
+python main_mt.py test_dpi.pcap output.pcap --block-app YouTube --block-ip 192.168.1.50 --lbs 2 --fps 2
 ```
 
-**With blocking:**
+**Web application:**
 ```bash
-./dpi_engine test_dpi.pcap output.pcap \
+pip install -r requirements.txt
+python run_web.py
+# Open http://127.0.0.1:8080
+```
+
+### Blocking options
+
+```bash
+python main_simple.py test_dpi.pcap output.pcap \
     --block-app YouTube \
     --block-app TikTok \
     --block-ip 192.168.1.50 \
@@ -953,7 +945,7 @@ g++ -std=c++17 -pthread -O2 -I include -o dpi_engine \
 
 **Configure threads (multi-threaded only):**
 ```bash
-./dpi_engine input.pcap output.pcap --lbs 4 --fps 4
+python main_mt.py input.pcap output.pcap --lbs 4 --fps 4
 # Creates 4 LB threads × 4 FP threads = 16 processing threads
 ```
 
@@ -1041,7 +1033,7 @@ python3 generate_test_pcap.py
 
 1. **Add More App Signatures**
    ```cpp
-   // In types.cpp
+   # In dpi/types.py
    if (sni.find("twitch") != std::string::npos)
        return AppType::TWITCH;
    ```
