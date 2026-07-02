@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import threading
 
-from .types import AppType, app_type_from_string, app_type_to_string, parse_ip_string
+from .dpi_types import AppType, app_type_from_string, app_type_to_string, parse_ip_string
 
 
 class BlockingRules:

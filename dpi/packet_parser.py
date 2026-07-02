@@ -6,7 +6,7 @@ import struct
 from dataclasses import dataclass
 
 from .pcap_reader import RawPacket
-from .types import format_ip, parse_ip_string
+from .dpi_types import format_ip, parse_ip_string
 
 
 class TCPFlags:

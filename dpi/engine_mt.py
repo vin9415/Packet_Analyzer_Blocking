@@ -14,7 +14,7 @@ from .pcap_reader import PcapReader
 from .sni_extractor import extract_http_host, extract_sni
 from .thread_safe_queue import TSQueue
 from .report import banner, row, section
-from .types import (
+from .dpi_types import (
     AppType,
     FiveTuple,
     app_type_to_string,

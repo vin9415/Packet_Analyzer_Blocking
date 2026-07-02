@@ -10,7 +10,7 @@ from .blocking_rules import BlockingRules
 from .packet_parser import parse, tuple_from_parsed
 from .pcap_reader import PcapReader
 from .sni_extractor import extract_http_host, extract_sni
-from .types import AppType, FiveTuple, app_type_to_string, sni_to_app_type
+from .dpi_types import AppType, FiveTuple, app_type_to_string, sni_to_app_type
 
 
 @dataclass
