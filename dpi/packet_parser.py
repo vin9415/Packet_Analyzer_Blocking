@@ -161,7 +161,7 @@ def parse(raw: RawPacket) -> ParsedPacket | None:
 
 
 def tuple_from_parsed(parsed: ParsedPacket):
-    from .types import FiveTuple
+    from .dpi_types import FiveTuple
 
     return FiveTuple(
         src_ip=parse_ip_string(parsed.src_ip),
