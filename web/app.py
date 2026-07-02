@@ -22,7 +22,7 @@ if str(ROOT) not in sys.path:
 from dpi.blocking_rules import BlockingRules
 from dpi.processor import process_pcap
 from dpi.report import AUTHOR
-from dpi.types import list_blockable_apps
+from dpi.dpi_types import list_blockable_apps
 
 UPLOAD_DIR = ROOT / "web" / "uploads"
 OUTPUT_DIR = ROOT / "web" / "outputs"
